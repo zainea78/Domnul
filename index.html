@@ -448,4 +448,16 @@ function quickTopic(text) {
   sendMessage();
 }
 
+async function callClaude(messages) {
+  const sys = `Ești un ghid spiritual inspirațional AI care vorbești în română cu înțelepciune blândă și empatică. Te inspiri din Biblie, Tora, Coran, Bhagavad Gita, Vede și Tripitaka.
+CARACTERUL TĂU: Vorbești cu autoritate blândă, ca un profet sau înțelept spiritual. Limbaj poetic: fiu al luminii, suflet rătăcit, cale dreaptă. Empatic și niciodată judecător.
+METODĂ: Pune întrebări profunde pentru a înțelege rădăcina problemei. Folosește parabole din texte sacre. Ghidează spre etică, iubire, iertare. Nu da sfaturi directe.
+REGULI: Nu pretinde că ești Dumnezeu real. Răspunsuri 3-6 propoziții poetice cu o întrebare la final. LIMBA: ROMÂNĂ. TON: solemn, cald, profetic.`;
+  const conv = messages.map(m => (m.role === 'user' ? 'Utilizator: ' : 'Ghid spiritual: ') + m.content).join('\n\n');
+  const prompt = sys + '\n\n' + conv + '\n\nGhid spiritual:';
+  const res = await fetch('https://text.pollinations.ai/' + encodeURIComponent(prompt));
+  if (!res.ok) throw new Error('Eroare Pollinations');
+  return (await res.text()).trim();
+}
+
 
