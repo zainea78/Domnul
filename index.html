@@ -362,11 +362,6 @@
 
     <div class="revolut-handle">@zainea78 <span>Revolut · acceptă și fără cont</span></div>
 
-    <a href="https://revolut.me/zainea78" target="_blank" rel="noopener" class="revolut-btn">
-      <div class="revolut-logo">R</div>
-      Deschide Revolut
-    </a>
-
     <p class="donate-modal-note">Scanează QR-ul cu camera telefonului sau apasă butonul pentru a deschide Revolut.<br>Poți dona chiar dacă nu ai cont Revolut.</p>
   </div>
 </div>
@@ -690,8 +685,11 @@ function speakText(text, msgEl) {
   const voices = speechSynthesis.getVoices();
   const roAll = voices.filter(v => v.lang.startsWith('ro'));
   
-  // Best Romanian voice selection
-  const bestVoice = roAll.find(v => /google|microsoft/i.test(v.name)) || roAll[0] || null;
+  // Best masculine Romanian voice — prefer Google/Microsoft male voices
+  const maleVoice = roAll.find(v => /andrei|ion|george|male|masculin/i.test(v.name))
+    || roAll.find(v => /google|microsoft/i.test(v.name) && !/female|feminin|ioana|maria|elena/i.test(v.name))
+    || roAll[0] || null;
+  const bestVoice = maleVoice;
 
   // Show speaking indicator
   speakingMsgEl = msgEl;
@@ -730,14 +728,14 @@ function speakText(text, msgEl) {
     utter.voice = bestVoice;
 
     if (voiceMode === 1) {
-      // SOLEMN: deep, slow, authoritative
-      utter.rate = 0.78;
-      utter.pitch = 0.6;
+      // SOLEMN: very deep, slow, authoritative — ca un profet al Vechiului Testament
+      utter.rate = 0.72;
+      utter.pitch = 0.45;
       utter.volume = 1;
     } else {
-      // PROFET: warm, gentle
-      utter.rate = 0.88;
-      utter.pitch = 0.85;
+      // PROFET: warm, gentle, blând — ca Iisus sau un înțelept
+      utter.rate = 0.82;
+      utter.pitch = 0.70;
       utter.volume = 1;
     }
 
