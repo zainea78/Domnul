@@ -303,11 +303,11 @@
   <div class="chat-container">
     <div class="voice-bar">
       <span class="voice-label">🔊 Voce:</span>
-      <button class="voice-btn active" id="vBtn1" onclick="setVoice(1)" aria-label="Voce solemnă">⛪ Solemn</button>
-      <button class="voice-btn" id="vBtn2" onclick="setVoice(2)" aria-label="Voce de profet">🕊 Profet</button>
-      <button class="voice-btn mute" id="vBtn0" onclick="setVoice(0)" aria-label="Dezactivează vocea">🔕 Fără voce</button>
+      <button class="voice-btn active" id="vBtn1" onclick="setVoice(1)">⛪ Solemn</button>
+      <button class="voice-btn" id="vBtn2" onclick="setVoice(2)">🕊 Profet</button>
+      <button class="voice-btn mute" id="vBtn0" onclick="setVoice(0)">🔕 Fără voce</button>
     </div>
-    <div class="chat-messages" id="chatMessages" aria-live="polite" aria-label="Conversație spirituală">
+    <div class="chat-messages" id="chatMessages">
       <div class="msg divine">
         <div class="msg-avatar">☀️</div>
         <div class="msg-bubble">Fiu al luminii, Te-ai întors la izvor. Știu că inima ta poartă o povară — poate o durere pe care nu o poți numi, poate o întrebare care nu dă pace.<br><br>Vorbește-mi fără teamă. Ce anume te-a adus la acest prag?</div>
@@ -316,7 +316,7 @@
     <div class="chat-divider"></div>
     <div class="chat-input-area">
       <textarea id="userInput" class="chat-input" placeholder="Scrie gândul tău cu inima deschisă..." rows="1"></textarea>
-      <button class="send-btn" id="sendBtn" onclick="sendMessage()" aria-label="Trimite mesajul">🕊</button>
+      <button class="send-btn" id="sendBtn" onclick="sendMessage()">🕊</button>
     </div>
   </div>
 
@@ -352,7 +352,7 @@
 <!-- DONATE MODAL -->
 <div id="donateModal">
   <div class="donate-modal-box">
-    <button class="donate-modal-close" onclick="closeDonateModal()" aria-label="Închide modalul">✕</button>
+    <button class="donate-modal-close" onclick="closeDonateModal()">✕</button>
     <div class="donate-modal-title">✦ Dăruiește cu Bucurie ✦</div>
     <p class="donate-modal-verse">„Fiecare să dea după cum a hotărât în inima lui, nu cu părere de rău sau de silă, căci Dumnezeu iubește pe cel ce dă cu bucurie." — 2 Corinteni 9:7</p>
 
@@ -361,6 +361,11 @@
     </div>
 
     <div class="revolut-handle">@zainea78 <span>Revolut · acceptă și fără cont</span></div>
+
+    <a href="https://revolut.me/zainea78" target="_blank" rel="noopener" class="revolut-btn">
+      <div class="revolut-logo">R</div>
+      Deschide Revolut
+    </a>
 
     <p class="donate-modal-note">Scanează QR-ul cu camera telefonului sau apasă butonul pentru a deschide Revolut.<br>Poți dona chiar dacă nu ai cont Revolut.</p>
   </div>
@@ -443,10 +448,6 @@ function quickTopic(text) {
   sendMessage();
 }
 
-// Cheie Gemini (gratuită) — restricționează-o la domnul.vercel.app în Google AI Studio
-const GEMINI_API_KEY = 'AIzaSyBZbSe44WZkF-nqzar-mbte2s3zKz654FU';
-const GEMINI_MODEL = 'gemini-2.0-flash-lite';
-
 async function callClaude(messages) {
   const sys = `Ești un ghid spiritual inspirațional AI care vorbește în română cu înțelepciune blândă și empatică. Te inspiri din Biblie (Vechiul și Noul Testament), Tora, Coran, Bhagavad Gita, Vede și Tripitaka.
 
@@ -474,37 +475,19 @@ REGULI ABSOLUTE:
 - Răspunsuri: 3-6 propoziții poetice cu o întrebare la final (primele mesaje), mai târziu mai concrete
 - LIMBA: ROMÂNĂ exclusiv. TON: solemn, cald, profetic.`;
 
-  const contents = messages.map((m) => ({
-    role: m.role === 'assistant' ? 'model' : 'user',
-    parts: [{ text: String(m.content || '') }],
-  }));
-
-  const url =
-    'https://generativelanguage.googleapis.com/v1beta/models/' +
-    GEMINI_MODEL +
-    ':generateContent?key=' +
-    encodeURIComponent(GEMINI_API_KEY);
-
-  const res = await fetch(url, {
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      systemInstruction: { parts: [{ text: sys }] },
-      contents,
-      generationConfig: { maxOutputTokens: 800, temperature: 0.85 },
-    }),
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 800,
+      system: sys,
+      messages
+    })
   });
-
-  const data = await res.json();
-  if (!res.ok) {
-    const msg = data.error?.message || 'Eroare la serviciul AI';
-    throw new Error(msg);
-  }
-
-  const text =
-    data.candidates?.[0]?.content?.parts?.map((p) => p.text || '').join('') || '';
-  if (!text) throw new Error('Răspuns gol de la AI');
-  return text;
+  if (!res.ok) { const e = await res.json(); throw new Error(e.error?.message); }
+  const d = await res.json();
+  return d.content?.[0]?.text || '';
 }
 
 function appendMessage(type, text, avatar) {
@@ -532,30 +515,8 @@ function showTyping() {
 function removeTyping(id) { const e = document.getElementById(id); if(e) e.remove(); }
 
 const inp = document.getElementById('userInput');
-
-// Auto-resize textarea dynamically
-inp.addEventListener('input', function() {
-  this.style.height = 'auto';
-  this.style.height = Math.min(this.scrollHeight, 120) + 'px';
-});
-
-// Send on Enter (not Shift+Enter)
-inp.addEventListener('keydown', function(e) {
-  if (e.key === 'Enter' && !e.shiftKey) {
-    e.preventDefault();
-    sendMessage();
-  }
-});
-
-// Mobile: re-scroll to last message when keyboard opens
-inp.addEventListener('focus', function() {
-  setTimeout(() => {
-    const chat = document.getElementById('chatMessages');
-    chat.scrollTop = chat.scrollHeight;
-    // Also scroll the whole page so input is visible above keyboard
-    this.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  }, 400);
-});
+inp.addEventListener('input', function() { this.style.height='auto'; this.style.height = Math.min(this.scrollHeight,120)+'px'; });
+inp.addEventListener('keydown', function(e) { if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();} });
 
 function openDonateModal() {
   document.getElementById('donateModal').classList.add('show');
@@ -673,27 +634,40 @@ function speakText(text, msgEl) {
 
   stopSpeaking();
 
-  // Clean text
+  // Clean text: remove markdown, emoji-like chars
   const clean = text
     .replace(/[✦✤✧★☀️🕊🙏]/g, '')
     .replace(/<br>/g, '. ')
     .replace(/\s+/g, ' ')
     .trim();
 
-  // Split into sentences to avoid Android truncation bug (>300 chars)
-  const sentences = clean.match(/[^.!?]+[.!?]+/g) || [clean];
-  
+  const utter = new SpeechSynthesisUtterance(clean);
+  utter.lang = 'ro-RO';
+
+  // Voice selection
   loadVoices();
   const voices = speechSynthesis.getVoices();
   const roAll = voices.filter(v => v.lang.startsWith('ro'));
-  
-  // Best masculine Romanian voice — prefer Google/Microsoft male voices
-  const maleVoice = roAll.find(v => /andrei|ion|george|male|masculin/i.test(v.name))
-    || roAll.find(v => /google|microsoft/i.test(v.name) && !/female|feminin|ioana|maria|elena/i.test(v.name))
-    || roAll[0] || null;
-  const bestVoice = maleVoice;
 
-  // Show speaking indicator
+  if (voiceMode === 1) {
+    // SOLEMN: deeper, slower, lower pitch
+    utter.rate = 0.78;
+    utter.pitch = 0.6;
+    utter.volume = 1;
+    // prefer male voice
+    const male = roAll.find(v => /male|masculin|andrei|ion|george/i.test(v.name));
+    utter.voice = male || roAll[0] || null;
+  } else {
+    // PROFET: warm, gentle, slightly faster
+    utter.rate = 0.88;
+    utter.pitch = 0.85;
+    utter.volume = 1;
+    const warm = roAll.find(v => /female|feminin|ioana|maria/i.test(v.name)) || roAll[1] || roAll[0] || null;
+    // For profet we still try male but warmer settings
+    utter.voice = roAll[0] || null;
+  }
+
+  // Speaking indicator
   speakingMsgEl = msgEl;
   if (msgEl) {
     msgEl.classList.add('speaking');
@@ -706,49 +680,18 @@ function speakText(text, msgEl) {
     }
   }
 
-  function stopIndicator() {
+  utter.onend = utter.onerror = () => {
     if (speakingMsgEl) {
       speakingMsgEl.classList.remove('speaking');
       const pulse = speakingMsgEl.querySelector('.speaking-pulse');
       if (pulse) pulse.remove();
       speakingMsgEl = null;
     }
-  }
+  };
 
-  // Queue-based TTS to fix Android truncation
-  let idx = 0;
-  function speakNext() {
-    if (idx >= sentences.length || voiceMode === 0) {
-      stopIndicator();
-      return;
-    }
-    const sentence = sentences[idx++].trim();
-    if (!sentence) { speakNext(); return; }
-
-    const utter = new SpeechSynthesisUtterance(sentence);
-    utter.lang = 'ro-RO';
-    utter.voice = bestVoice;
-
-    if (voiceMode === 1) {
-      // SOLEMN: very deep, slow, authoritative — ca un profet al Vechiului Testament
-      utter.rate = 0.72;
-      utter.pitch = 0.45;
-      utter.volume = 1;
-    } else {
-      // PROFET: warm, gentle, blând — ca Iisus sau un înțelept
-      utter.rate = 0.82;
-      utter.pitch = 0.70;
-      utter.volume = 1;
-    }
-
-    utter.onend = () => speakNext();
-    utter.onerror = () => { stopIndicator(); };
-    currentUtterance = utter;
-    speechSynthesis.speak(utter);
-  }
-
-  // Small delay helps browsers load voices
-  setTimeout(() => speakNext(), 150);
+  currentUtterance = utter;
+  // Small delay helps some browsers
+  setTimeout(() => speechSynthesis.speak(utter), 120);
 }
 
 // ========== ALTELE MODAL ==========
