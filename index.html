@@ -444,7 +444,7 @@ function quickTopic(text) {
 }
 
 async function callClaude(messages) {
-  const KEY = 'AIzaSyCjnOWE0KQJTrbSTQ6EIr3nGUDGcZaYIKA';
+  const KEY = 'AIzaSyAiDlSS8idEJoyhAT09NNtQaBPxiyR-Hdk';
   const URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + KEY;
   const sys = 'Esti un ghid spiritual inspirational care vorbesti in romana cu intelepciune blanda. Te inspiri din Biblie, Tora, Coran, Bhagavad Gita si Tripitaka. Vorbesti ca un profet bland, NU ca Dumnezeu real. Raspunsuri scurte si clare: maxim 4 propozitii + o intrebare simpla la final. TON: solemn, cald, usor de inteles.';
   const msgs = messages.map(m => ({
