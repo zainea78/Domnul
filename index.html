@@ -444,25 +444,16 @@ function quickTopic(text) {
 }
 
 async function callClaude(messages) {
-  const KEY = 'AIzaSyDm8fsby1mBrqAWWEzDXYkQzBc6zwyJxeg';
-  const URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + KEY;
-  const sys = 'Esti un ghid spiritual inspirational care vorbesti in romana cu intelepciune blanda. Te inspiri din Biblie, Tora, Coran, Bhagavad Gita si Tripitaka. Vorbesti ca un profet bland, NU ca Dumnezeu real. Raspunsuri scurte si clare: maxim 4 propozitii + o intrebare simpla la final. TON: solemn, cald, usor de inteles.';
-  const msgs = messages.map(m => ({
-    role: m.role === 'assistant' ? 'model' : 'user',
-    parts: [{ text: m.content }]
-  }));
-  const res = await fetch(URL, {
+  const KEY = 'OPENAI_KEY_HERE';
+  const sys = 'Esti un ghid spiritual in romana. Vorbesti ca un profet bland. Raspunsuri scurte: maxim 4 propozitii plus o intrebare la final. TON: solemn, cald.';
+  const res = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      system_instruction: { parts: [{ text: sys }] },
-      contents: msgs,
-      generationConfig: { maxOutputTokens: 300, temperature: 0.75 }
-    })
+    headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + KEY},
+    body: JSON.stringify({model: 'gpt-4o-mini', max_tokens: 300, temperature: 0.75, messages: [{role: 'system', content: sys}, ...messages]})
   });
   if (!res.ok) { const e = await res.json(); throw new Error(e.error.message); }
   const d = await res.json();
-  return d.candidates[0].content.parts[0].text;
+  return d.choices[0].message.content;
 }
 
 
